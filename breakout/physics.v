@@ -91,11 +91,14 @@ fn (mut e PhysicsEngine) update_physics() {
 				vel.y = f32(math.max(sy,0.2)*math.sign(center_diff_y))
             }
 			if other.kind == .wall || other.kind == .brick {
-				if pseudo_ball.position.y >= (other.position.y + other.size.y)
-					|| (pseudo_ball.position.y + pseudo_ball.size.y) <= other.position.y {
-					vel.y = -vel.y
+				cba:=Vec2{x:pseudo_ball.position.x+pseudo_ball.size.x/2,y:pseudo_ball.position.y+pseudo_ball.size.y/2}
+				cbri:=Vec2{x:other.position.x+other.size.x/2,y:other.position.y+other.size.y/2}
+				diff:=Vec2{x:cba.x-cbri.x,y:cba.y-cbri.y}
+				ang:= i32((math.atan2(diff.y,diff.x) + 4 * math.pi)*180/math.pi) % 360
+				if (ang < 15) || (ang > 345) || ((ang > 165) && (ang <195)) {
+					vel.x=-vel.x
 				} else {
-					vel.x = -vel.x
+					vel.y=-vel.y
 				}
 			}
 			if other.kind == .brick {

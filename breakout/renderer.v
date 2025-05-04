@@ -17,12 +17,12 @@ pub struct GameRenderer {
 
 pub fn (mut r GameRenderer) render_loop() {
 
-	r_handle_event:=fn[mut r](e &gg.Event, a voidptr){
+	r_handle_event:=fn[mut r](e &gg.Event, _ voidptr){
 		r.handle_event(e,mut r.ctx or {
 			panic('failed to create graphics context: \$err')
 		})
 	}
-	r_event_fn:=fn[mut r](a voidptr){
+	r_event_fn:=fn[mut r](_ voidptr){
 		r.render_frame(mut r.ctx or {
 			panic('failed to create graphics context: \$err')
 		})
@@ -41,7 +41,7 @@ pub fn (mut r GameRenderer) render_loop() {
 	}).run()
 }
 
-fn (mut r GameRenderer) handle_event(e &gg.Event, mut ctx gg.Context) {
+fn (mut r GameRenderer) handle_event(e &gg.Event, mut _ gg.Context) {
     if e.typ == .key_down {
         r.keys[e.key_code] = true
     } else if e.typ == .key_up {
