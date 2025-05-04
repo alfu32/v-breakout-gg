@@ -1,0 +1,104 @@
+module breakout
+
+import gg
+import gx
+
+const paddle_speed = 8.0
+
+@[heap]
+pub struct GameRenderer {
+    pub mut:
+        ctx         ?&gg.Context
+        engine      &PhysicsEngine
+        keys        map[gg.KeyCode]bool
+        score       int
+        game_state  string
+}
+
+pub fn (mut r GameRenderer) render_loop() {
+
+	r_handle_event:=fn[mut r](e &gg.Event, a voidptr){
+		r.handle_event(e,mut r.ctx or {
+			panic('failed to create graphics context: \$err')
+		})
+	}
+	r_event_fn:=fn[mut r](a voidptr){
+		r.render_frame(mut r.ctx or {
+			panic('failed to create graphics context: \$err')
+		})
+	}
+    r.ctx = gg.new_context(
+        width: 800
+        height: 600
+        window_title: 'Breakout in V'
+        user_data: r,
+		frame_fn: r_event_fn,
+		event_fn: r_handle_event,
+    )
+	println("running rendering loop")
+    (r.ctx or {
+		panic('failed to create graphics context: \$err')
+	}).run()
+}
+
+fn (mut r GameRenderer) handle_event(e &gg.Event, mut ctx gg.Context) {
+    if e.typ == .key_down {
+        r.keys[e.key_code] = true
+    } else if e.typ == .key_up {
+        r.keys.delete(e.key_code)
+    }
+}
+
+fn (mut r GameRenderer) render_frame(mut ctx gg.Context) {
+    mut state := r.engine.get_state()
+
+    for p in state {
+        if p.kind == .paddle {
+            mut new_pos := p.position
+            if r.keys[.left] { new_pos.x -= paddle_speed }
+            if r.keys[.right] { new_pos.x += paddle_speed }
+
+            if new_pos.x < 0 { new_pos.x = 0 }
+            if new_pos.x + p.size.x > ctx.width {
+                new_pos.x = ctx.width - p.size.x
+            }
+
+            new_p := breakout.Primitive{ ...p, position: new_pos }
+            r.engine.accept_update(p, new_p, fn (err string, _ breakout.Primitive) {
+                if err != '' {
+                    println('Update error: \$err')
+                }
+            })
+        }
+    }
+
+    state = r.engine.get_state()
+	ctx.begin()
+    for p in state {
+        match p.kind {
+            .brick {
+                ctx.draw_rect_filled(p.position.x+1, p.position.y+1, p.size.x-2, p.size.y-2, gx.dark_red)
+            }
+            .ball {
+                ctx.draw_circle_filled(p.position.x, p.position.y, p.size.x / 2, gx.orange)
+            }
+			.wall {
+				ctx.draw_rect_filled(p.position.x+1, p.position.y+1, p.size.x-2, p.size.y-2, gx.light_gray)
+			}
+			.paddle {
+				ctx.draw_rect_filled(p.position.x, p.position.y, p.size.x, p.size.y, gx.white)
+			}
+		}
+    }
+
+    r.score = r.engine.score
+    ctx.draw_text(10, 10, 'Score: \$r.score', gx.TextCfg{color:gx.light_gray})
+
+    match r.game_state {
+        'win' { ctx.draw_text(300, 280, 'YOU WIN!', gx.TextCfg{color:gx.green}) }
+        'lose' { ctx.draw_text(300, 280, 'GAME OVER', gx.TextCfg{color:gx.red}) }
+        else {}
+    }
+	ctx.end()
+	// println('rendering frame done')
+}
