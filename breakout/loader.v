@@ -1,23 +1,25 @@
 module breakout
 
-const cell_w = 32
+const u = 8
 
-const cell_h = 16
+const cell_w = 4 * u
+
+const cell_h = 2 * u
 
 pub fn parse_ascii_map(input string) []Primitive {
 	mut primitives := []Primitive{}
 	lines := input.split_into_lines()
 
+	mut id_count := 0
 	for row, line in lines {
 		for col, ch in line.runes() {
 			x := f32(col * breakout.cell_w)
 			y := f32(row * breakout.cell_h)
-			id := '\${${row}}_\${${col}}'
 
 			match ch {
 				`W` {
 					primitives << Primitive{
-						id: id
+						id: 'wall_${id_count++}'
 						kind: .wall
 						position: Vec2{x, y}
 						size: Vec2{breakout.cell_w, breakout.cell_h}
@@ -25,7 +27,7 @@ pub fn parse_ascii_map(input string) []Primitive {
 				}
 				`B` {
 					primitives << Primitive{
-						id: id
+						id: 'brick_${id_count++}'
 						kind: .brick
 						position: Vec2{x, y}
 						size: Vec2{breakout.cell_w, breakout.cell_h}
@@ -33,18 +35,18 @@ pub fn parse_ascii_map(input string) []Primitive {
 				}
 				`O` {
 					primitives << Primitive{
-						id: id
+						id: 'ball_${id_count++}'
 						kind: .ball
-						position: Vec2{x + 16, y + 8}
-						size: Vec2{16, 16}
+						position: Vec2{x + 2 * breakout.u, y + breakout.u}
+						size: Vec2{breakout.u, breakout.u}
 					}
 				}
 				`P` {
 					primitives << Primitive{
-						id: id
+						id: 'paddle_${id_count++}'
 						kind: .paddle
 						position: Vec2{x, y}
-						size: Vec2{96, 16}
+						size: Vec2{4 * breakout.u, breakout.u}
 					}
 				}
 				else {}

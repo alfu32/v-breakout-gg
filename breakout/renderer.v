@@ -3,7 +3,7 @@ module breakout
 import gg
 import gx
 
-const paddle_speed = 8.0
+const paddle_speed = 10.0
 
 @[heap]
 pub struct GameRenderer {
@@ -13,6 +13,7 @@ pub struct GameRenderer {
         keys        map[gg.KeyCode]bool
         score       int
         game_state  string
+		size        Vec2
 }
 
 pub fn (mut r GameRenderer) render_loop() {
@@ -27,14 +28,23 @@ pub fn (mut r GameRenderer) render_loop() {
 			panic('failed to create graphics context: \$err')
 		})
 	}
-    r.ctx = gg.new_context(
-        width: 800
-        height: 600
-        window_title: 'Breakout in V'
-        user_data: r,
+	r_handle_resize_fn:=fn[mut r](e &gg.Event, _ voidptr){
+		println(e)
+		r.size.x = e.window_width
+		r.size.y = e.window_height
+		r.engine.size.x = e.window_width
+		r.engine.size.y = e.window_height
+
+	}
+    r.ctx = gg.new_context(gg.Config{
+		width: int(r.size.x)
+		height: int(r.size.y)
+		window_title: 'Breakout in V'
+		user_data: r,
 		frame_fn: r_event_fn,
 		event_fn: r_handle_event,
-    )
+		resized_fn: r_handle_resize_fn
+	})
 	println("running rendering loop")
     (r.ctx or {
 		panic('failed to create graphics context: \$err')
@@ -57,10 +67,12 @@ fn (mut r GameRenderer) render_frame(mut ctx gg.Context) {
             mut new_pos := p.position
             if r.keys[.left] { new_pos.x -= paddle_speed }
             if r.keys[.right] { new_pos.x += paddle_speed }
+			if r.keys[.up] { new_pos.y -= paddle_speed }
+			if r.keys[.down] { new_pos.y += paddle_speed }
 
             if new_pos.x < 0 { new_pos.x = 0 }
-            if new_pos.x + p.size.x > ctx.width {
-                new_pos.x = ctx.width - p.size.x
+            if new_pos.x + p.size.x > r.engine.size.x {
+                new_pos.x = r.engine.size.x - p.size.x
             }
 
             new_p := breakout.Primitive{ ...p, position: new_pos }
@@ -80,7 +92,9 @@ fn (mut r GameRenderer) render_frame(mut ctx gg.Context) {
                 ctx.draw_rect_filled(p.position.x+1, p.position.y+1, p.size.x-2, p.size.y-2, gx.dark_red)
             }
             .ball {
-                ctx.draw_circle_filled(p.position.x, p.position.y, p.size.x / 2, gx.orange)
+				sz:=p.size.x / 2
+                //ctx.draw_circle_filled(p.position.x+sz, p.position.y+sz, sz, gx.orange)
+				ctx.draw_circle_filled(p.position.x, p.position.y, sz, gx.orange)
             }
 			.wall {
 				ctx.draw_rect_filled(p.position.x+1, p.position.y+1, p.size.x-2, p.size.y-2, gx.light_gray)
@@ -92,7 +106,7 @@ fn (mut r GameRenderer) render_frame(mut ctx gg.Context) {
     }
 
     r.score = r.engine.score
-    ctx.draw_text(10, 10, 'Score: \$r.score', gx.TextCfg{color:gx.light_gray})
+    ctx.draw_text(10, 10, 'Score: ${r.score}', gx.TextCfg{color:gx.light_gray})
 
     match r.game_state {
         'win' { ctx.draw_text(300, 280, 'YOU WIN!', gx.TextCfg{color:gx.green}) }
