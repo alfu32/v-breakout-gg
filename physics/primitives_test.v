@@ -1,4 +1,4 @@
-module breakout
+module physics
 
 fn test_vec2() {
 	mut z0 := Vec2{}

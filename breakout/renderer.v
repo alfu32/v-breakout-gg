@@ -2,6 +2,7 @@ module breakout
 
 import gg
 import gx
+import physics
 
 const paddle_speed = 10.0
 
@@ -9,12 +10,12 @@ const paddle_speed = 10.0
 pub struct GameRenderer {
 pub mut:
 	ctx        ?&gg.Context
-	engine     &PhysicsEngine
+	engine     &physics.PhysicsEngine
 	keys       map[gg.KeyCode]bool
 	score      int
 	game_state string
-	size       Vec2
-	ball_histo SlidingChangeBuffer[Vec2] = slding_change_buffer_create[Vec2](10)
+	size       physics.Vec2
+	ball_histo physics.SlidingChangeBuffer[physics.Vec2] = physics.slding_change_buffer_create[physics.Vec2](10)
 }
 
 pub fn (mut r GameRenderer) render_loop() {
@@ -79,11 +80,11 @@ fn (mut r GameRenderer) render_frame(mut ctx gg.Context) {
 				new_pos.x = r.engine.size.x - p.size.x
 			}
 
-			new_p := Primitive{
+			new_p := physics.Primitive{
 				...p
 				position: new_pos
 			}
-			r.engine.accept_update(p, new_p, fn (err string, _ Primitive) {
+			r.engine.accept_update(p, new_p, fn (err string, _ physics.Primitive) {
 				if err != '' {
 					println('Update error: \$err')
 				}

@@ -1,18 +1,19 @@
 import os
 import breakout
+import physics
 
 fn main() {
 	ascii := os.read_file('scene.txt') or { panic(err) }
-	prims := breakout.parse_ascii_map(ascii)
+	prims := physics.parse_ascii_map(ascii)
 
-	mut engine := &breakout.PhysicsEngine{
-		size: breakout.Vec2{800, 600}
+	mut engine := &physics.PhysicsEngine{
+		size: physics.Vec2{800, 600}
 	}
 	engine.add_all(prims)
 
 	mut game := &breakout.GameRenderer{
 		engine: engine
-		size: engine.size.copy()
+		size:   engine.size.copy()
 	}
 
 	engine.set_game_end_callback(fn [mut game] (state string) {
