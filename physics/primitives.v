@@ -98,7 +98,7 @@ fn (wall Segment) bounce(ball_trajectory Segment) (bool, Vec2, Vec2) {
 	mut hit_point := vec2_null
 
 	if denom != 0 {
-		println('denom not zero :: ${denom}')
+		// println('denom not zero :: ${denom}')
 		t := dp.cross(db) / denom
 		w := dp.cross(da) / denom
 
