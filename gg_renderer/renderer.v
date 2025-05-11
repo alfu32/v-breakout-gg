@@ -1,4 +1,4 @@
-module breakout
+module gg_renderer
 
 import gg
 import gx

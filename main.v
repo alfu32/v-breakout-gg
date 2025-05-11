@@ -1,5 +1,5 @@
 import os
-import breakout
+import gg_renderer
 import physics
 
 fn main() {
@@ -11,7 +11,7 @@ fn main() {
 	}
 	engine.add_all(prims)
 
-	mut game := &breakout.GameRenderer{
+	mut game := &gg_renderer.GameRenderer{
 		engine: engine
 		size:   engine.size.copy()
 	}
