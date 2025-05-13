@@ -3,8 +3,14 @@ import gg_renderer
 import physics
 
 fn main() {
-	ascii := os.read_file('scene.txt') or { panic(err) }
-	prims := physics.parse_ascii_map(ascii)
+	println(os.args[1..])
+	mut scene_file := if os.args.len > 1 {
+		os.args[1]
+	} else {
+		'scene.txt'
+	}
+	ascii := os.read_file(scene_file) or { panic(err) }
+	prims := parse_ascii_map(ascii)
 
 	mut engine := &physics.PhysicsEngine{
 		size: physics.Vec2{800, 600}

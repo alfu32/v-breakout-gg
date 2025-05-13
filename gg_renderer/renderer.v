@@ -15,7 +15,6 @@ pub mut:
 	score      int
 	game_state string
 	size       physics.Vec2
-	ball_histo physics.SlidingChangeBuffer[physics.Vec2] = physics.slding_change_buffer_create[physics.Vec2](10)
 }
 
 pub fn (mut r GameRenderer) render_loop() {
@@ -98,29 +97,26 @@ fn (mut r GameRenderer) render_frame(mut ctx gg.Context) {
 		match p.kind {
 			.brick {
 				ctx.draw_rect_filled(p.position.x + 1, p.position.y + 1, p.size.x - 2,
-					p.size.y - 2, gx.dark_red)
+					p.size.y - 2, p.color)
 			}
 			.ball {
 				sz := p.size.x / 2
 				// ctx.draw_circle_filled(p.position.x+sz, p.position.y+sz, sz, gx.orange)
-				ctx.draw_circle_filled(p.position.x, p.position.y, sz, gx.orange)
+				ctx.draw_circle_filled(p.position.x, p.position.y, sz, p.color)
 			}
 			.wall {
 				ctx.draw_rect_filled(p.position.x + 1, p.position.y + 1, p.size.x - 2,
-					p.size.y - 2, gx.light_gray)
+					p.size.y - 2, p.color)
 			}
 			.paddle {
-				ctx.draw_rect_filled(p.position.x, p.position.y, p.size.x, p.size.y, gx.white)
+				ctx.draw_rect_filled(p.position.x, p.position.y, p.size.x, p.size.y, p.color)
 			}
 		}
 	}
 
 	r.score = r.engine.score
 
-	for _, v in r.engine.velocities {
-		r.ball_histo.append[T](v)
-	}
-	txt := 'Score: ${r.score}, Balls ${r.ball_histo.buffer.map(it.str[Vec2]()).join(',')}'
+	txt := 'Score: ${r.score}'
 	ctx.draw_text(10, 10, txt, gx.TextCfg{ color: gx.light_gray })
 
 	match r.game_state {

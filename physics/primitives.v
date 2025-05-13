@@ -1,6 +1,8 @@
 module physics
 
 import strconv
+import gx
+import math
 
 pub enum PrimitiveType {
 	paddle
@@ -32,35 +34,58 @@ pub fn (v Vec2) equals(b Vec2) bool {
 	return '${v.x},${v.y}' == '${b.x},${b.y}'
 }
 
-fn (v Vec2) + (b Vec2) Vec2 {
+pub fn (v Vec2) + (b Vec2) Vec2 {
 	return Vec2{v.x + b.x, v.y + b.y}
 }
 
-fn (v Vec2) - (b Vec2) Vec2 {
+pub fn (v Vec2) - (b Vec2) Vec2 {
 	return Vec2{v.x - b.x, v.y - b.y}
 }
 
-fn (v Vec2) mul(s f32) Vec2 {
+pub fn (v Vec2) len2() f32 {
+	return v.dot(v)
+}
+
+pub fn (v Vec2) len() f32 {
+	return math.sqrtf(v.len2())
+}
+
+pub fn (v Vec2) normalized() Vec2 {
+	if v.len() == 0 {
+		return Vec2{v.x, v.y}
+	} else {
+		return v.mul(1 / v.len())
+	}
+}
+
+pub fn (v Vec2) mul(s f32) Vec2 {
 	return Vec2{v.x * s, v.y * s}
 }
 
-fn (v Vec2) dot(b Vec2) f32 {
+pub fn (v Vec2) dot(b Vec2) f32 {
 	return v.x * b.x + v.y * b.y
 }
 
-fn (v Vec2) cross(b Vec2) f32 {
+pub fn (v Vec2) cross(b Vec2) f32 {
 	return v.x * b.y - v.y * b.x
 }
 
-fn (v Vec2) mul2(b Vec2) Vec2 {
+pub fn (v Vec2) mul2(b Vec2) Vec2 {
 	return Vec2{v.x * b.x, v.y * b.y}
 }
 
-fn (v Vec2) apply(fun fn (x f32) f32) Vec2 {
+pub fn (v Vec2) apply(fun fn (x f32) f32) Vec2 {
 	return Vec2{fun(v.x), fun(v.y)}
 }
 
-fn (v Vec2) sign() Vec2 {
+pub fn (v Vec2) clamp(max_size Vec2) Vec2 {
+	return Vec2{
+		x: if math.abs(v.x) > max_size.x { f32(math.sign(v.x)) * max_size.x } else { v.x }
+		y: if math.abs(v.y) > max_size.y { f32(math.sign(v.y)) * max_size.y } else { v.y }
+	}
+}
+
+pub fn (v Vec2) sign() Vec2 {
 	return Vec2{
 		x: if v.x < 0 {
 			-1
@@ -85,11 +110,11 @@ pub mut:
 	b Vec2
 }
 
-fn (s Segment) delta() Vec2 {
+pub fn (s Segment) delta() Vec2 {
 	return s.b - s.a
 }
 
-fn (wall Segment) bounce(ball_trajectory Segment) (bool, Vec2, Vec2) {
+pub fn (wall Segment) bounce(ball_trajectory Segment) (bool, Vec2, Vec2) {
 	da := wall.delta()
 	db := ball_trajectory.delta()
 	dp := ball_trajectory.a - wall.a
@@ -127,12 +152,25 @@ fn (wall Segment) bounce(ball_trajectory Segment) (bool, Vec2, Vec2) {
 	return true, hit_point, deflected_point
 }
 
+pub type OnFrameFn = fn (mut self Primitive, mut engine PhysicsEngine) Primitive
+
+pub fn void_frame_fn(mut self Primitive, mut engine PhysicsEngine) Primitive {
+	return self
+}
+
+pub type OnHitFn = fn (mut self Primitive, mut other Primitive, mut engine PhysicsEngine)
+
+pub fn void_hit_fn(mut self Primitive, mut other Primitive, mut engine PhysicsEngine) {}
+
 pub struct Primitive {
 pub mut:
-	id       string
-	kind     PrimitiveType
-	position Vec2
-	size     Vec2
+	id           string
+	kind         PrimitiveType
+	position     Vec2
+	size         Vec2
+	color        gx.Color
+	on_new_frame OnFrameFn = void_frame_fn
+	on_is_hit    OnHitFn   = void_hit_fn
 }
 
 pub fn (p Primitive) copy() Primitive {

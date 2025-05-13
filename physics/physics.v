@@ -1,7 +1,6 @@
 module physics
 
 import time
-import math
 
 struct CollisionPair {
 pub mut:
@@ -41,13 +40,14 @@ fn bounce(brick Primitive, ball_p_0 Vec2, speed_unit Vec2) (bool, Vec2, Vec2) {
 @[heap]
 pub struct PhysicsEngine {
 pub mut:
-	primitives  map[string]Primitive
-	velocities  map[string]Vec2
-	running     bool
-	score       int
-	energy      int
-	size        Vec2
-	on_game_end fn (string) = void_game_end
+	primitives    map[string]Primitive
+	velocities    map[string]Vec2
+	running       bool
+	score         int
+	energy        int
+	size          Vec2
+	on_game_end   fn (string) = void_game_end
+	ids_to_remove []string
 }
 
 fn void_game_end(_ string) {}
@@ -87,14 +87,14 @@ fn (mut e PhysicsEngine) simulation_loop() {
 }
 
 fn (mut e PhysicsEngine) update_physics() {
-	mut ids_to_remove := []string{}
-
 	for id, mut ball in e.primitives {
+		// mut ball := primitive.on_new_frame(mut primitive,mut e)
+		// ball = primitive
 		if ball.kind != .ball {
 			continue
 		}
 
-		mut vel := e.velocities[id] or { Vec2{1, -1} }
+		mut vel := e.velocities[id] or { Vec2{.1, -.1} }
 		mut new_pos := ball.position
 		new_pos.x += vel.x
 		new_pos.y += vel.y
@@ -122,8 +122,11 @@ fn (mut e PhysicsEngine) update_physics() {
 		mut pseudo_ball := ball.copy()
 		pseudo_ball.position = new_pos
 
-		for pid, other in e.primitives {
+		for pid, mut other in e.primitives {
 			if pid == id {
+				continue
+			}
+			if other.kind == .ball {
 				continue
 			}
 			if !aabb_collides(pseudo_ball, other) {
@@ -131,28 +134,21 @@ fn (mut e PhysicsEngine) update_physics() {
 			}
 			bounces, ball_pos_1, vel_1 := bounce(other, ball.position, vel)
 			if bounces {
-				if other.kind == .brick {
-					ids_to_remove << pid
-					e.score += 10
-				} else if other.kind == .paddle {
-					// center_diff := (pseudo_ball.position.x + pseudo_ball.size.x / 2) - (other.position.x + other.size.x / 2)
-					// vel.x += center_diff * 0.05
-					e.energy -= 10
-				}
 				new_pos = ball_pos_1
 				vel = vel_1
 				ball.position = new_pos
 				e.velocities[id] = vel
 				e.primitives[id] = ball
-				break
+				other.on_is_hit(mut other, mut ball, mut e)
+				// break
 			}
 		}
 		ball.position = new_pos
-		e.velocities[id] = vel
-		e.primitives[id] = ball
+		// e.velocities[id] = vel
+		// e.primitives[id] = ball
 	}
 
-	for id in ids_to_remove {
+	for id in e.ids_to_remove {
 		e.primitives.delete(id)
 	}
 
