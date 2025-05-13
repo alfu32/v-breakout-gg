@@ -87,9 +87,11 @@ fn (mut e PhysicsEngine) simulation_loop() {
 }
 
 fn (mut e PhysicsEngine) update_physics() {
+	// mut next_primitives:=map[string]Primitive{}
 	for id, mut ball in e.primitives {
-		// mut ball := primitive.on_new_frame(mut primitive,mut e)
-		// ball = primitive
+		// mut next_primitive := primitive.on_new_frame(mut primitive,mut e)
+		// next_primitives[ball.id]=ball
+		// mut ball := next_primitive
 		if ball.kind != .ball {
 			continue
 		}
@@ -104,14 +106,14 @@ fn (mut e PhysicsEngine) update_physics() {
 			e.velocities[ball.id] = vel
 			e.velocities[id] = vel
 			e.primitives[id] = ball
-			return
+			continue
 		}
 		if new_pos.y <= 0 || new_pos.y + ball.size.y >= e.size.y {
 			vel.y = -vel.y
 			e.velocities[ball.id] = vel
 			e.velocities[id] = vel
 			e.primitives[id] = ball
-			return
+			continue
 		}
 		// if new_pos.y > e.size.y {
 		// 	e.running = false
@@ -156,6 +158,7 @@ fn (mut e PhysicsEngine) update_physics() {
 		e.running = false
 		e.on_game_end('win')
 	}
+	// e.primitives = next_primitives.move()
 }
 
 pub fn (mut e PhysicsEngine) add_all(prims []Primitive) {

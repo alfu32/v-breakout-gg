@@ -5,7 +5,7 @@ import physics
 
 const u = 8
 
-const cell_w = 4 * u
+const cell_w = 2 * u
 
 const cell_h = 2 * u
 const speed_init = physics.Vec2{.1, -.1}
