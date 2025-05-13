@@ -9,8 +9,8 @@ const cell_w = 2 * u
 
 const cell_h = 2 * u
 const speed_init = physics.Vec2{.1, -.1}
-const speed_limit = physics.Vec2{1.7, 1.7}
-const speed_increase = physics.Vec2{1.01, 1.01}
+const speed_limit = physics.Vec2{2.7, 2.7}
+const speed_increase = physics.Vec2{1.05, 1.05}
 
 pub fn make_ball(pos physics.Vec2, id string) physics.Primitive {
 	return physics.Primitive{
